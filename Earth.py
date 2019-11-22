@@ -121,7 +121,7 @@ def get_queue(queue_cords):
 # used in get_field()
 def color_to_name(color):
     names = {0: 0, 3608535: 6, 9054639: 5, 154595: 3, 12992801: 4,
-             110937: 7, 14129935: 1, 172003: 2}
+             110937: 7, 14129935: 1, 172003: 2, 10066329: 8}
     try:
         give = names[color]
     except KeyError:
@@ -339,6 +339,11 @@ def sim_drop_map(colormap, active, offset):
     if np.array_equiv(real_field, test_field) and bottom_pad == 1:
         bottom_pad -= 1
     top_pad = 20 - bottom_pad - clean_active_shape.shape[0]
+    if top_pad < 0:
+        clean_active_shape = clean_active_shape[abs(top_pad):]
+        top_pad = 0
+    print('clean_active_shape, ((top_pad, bottom_pad), (left_pad, right_pad))\n', clean_active_shape, ((top_pad, bottom_pad), (left_pad, right_pad)))
+    print(real_field)
     new_out_layer = real_field + np.pad(clean_active_shape, ((top_pad, bottom_pad), (left_pad, right_pad)),
                                         mode='constant', constant_values=(0, 0))
     # print('out: \n', new_out_layer)
@@ -484,7 +489,7 @@ def earth(tile_map, active_piece, queue):
         for b in a:
             height_array = get_heights(b[2])
             scan_out = map_scan(b[2], b[1])
-            avg_height = math.sqrt(pow(height_array.sum(), 2) + pow(scan_out[5], 2)) / len(height_array)
+            avg_height = math.sqrt(pow(height_array.sum(), 2) + pow(scan_out[5], 4)) / len(height_array)
             # print('tested')
             if avg_height < lowest:
                 best = first_selection[num_a][1]
