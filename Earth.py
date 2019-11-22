@@ -6,6 +6,7 @@ import numpy as np
 from numpy import array
 import concurrent.futures
 import random
+import math
 
 pag.PAUSE = 0.0
 target_site = 'Jstris - Mozilla Firefox (Private Browsing)'
@@ -408,7 +409,7 @@ def hands_engine(color_map_in, current_level=0):
                      1: [(-3, 4), (-5, 5)], 3: [(-3, 5), (-4, 5), (-3, 5), (-3, 6)],
                      4: [(-3, 5), (-4, 5), (-3, 5), (-3, 6)], 5: [(-3, 5), (-4, 5), (-3, 5), (-3, 6)]}
 
-    print(color_map_in)
+    # print(color_map_in)
     color_map = color_map_in
     if current_level == 0:
         color_map = color_map_in[2]
@@ -450,6 +451,7 @@ def execute_offset(offset):
 def earth(tile_map, active_piece, queue):
     tile_map.append(active_piece)
     first_selection = hands_engine(tile_map, current_level=1)
+    # method to append queue to data
     temp_first = []
     for a in first_selection:
         a.append(queue[0])
@@ -461,9 +463,9 @@ def earth(tile_map, active_piece, queue):
     with concurrent.futures.ProcessPoolExecutor() as runner:
         second_selection = runner.map(hands_engine, first_selection)
         hold = []
-        print(second_selection)
+        # print(second_selection)
         for a in second_selection:
-            print('second', a)
+            # print('second', a)
             hold.append(a)
     # for a in first_selection:
     #     print(2)
@@ -481,8 +483,9 @@ def earth(tile_map, active_piece, queue):
     for num_a, a in enumerate(hold):
         for b in a:
             height_array = get_heights(b[2])
-            avg_height = height_array.sum() / len(height_array)
-            print('tested')
+            scan_out = map_scan(b[2], b[1])
+            avg_height = math.sqrt(pow(height_array.sum(), 2) + pow(scan_out[5], 2)) / len(height_array)
+            # print('tested')
             if avg_height < lowest:
                 best = first_selection[num_a][1]
                 lowest = avg_height
