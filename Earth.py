@@ -11,7 +11,7 @@ pag.PAUSE = 0.0
 target_site = 'Jstris - Mozilla Firefox (Private Browsing)'
 test_target = 'Jstris - Mozilla Firefox'
 
-window_name = test_target
+window_name = target_site
 
 
 # 6:Z, 7:S, 1:I, 2:O, 3:L, 4:J, 5:T
@@ -458,7 +458,7 @@ def earth(tile_map, active_piece, queue):
         hold = []
         print(second_selection)
         for a in second_selection:
-            print('secord', a)
+            print('second', a)
             hold.append(a)
     # for a in first_selection:
     #     print(2)
