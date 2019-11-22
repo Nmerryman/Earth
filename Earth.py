@@ -12,6 +12,10 @@ target_site = 'Jstris - Mozilla Firefox (Private Browsing)'
 test_target = 'Jstris - Mozilla Firefox'
 
 window_name = target_site
+if window_name == 'Jstris - Mozilla Firefox (Private Browsing)':
+    right_key = 'up'
+else:
+    right_key = 'v'
 
 
 # 6:Z, 7:S, 1:I, 2:O, 3:L, 4:J, 5:T
@@ -432,7 +436,8 @@ def hands_engine(color_map_in, current_level=0):
 
 def execute_offset(offset):
     # rotations
-    pag.press('q', presses=int(offset[0]))
+    global right_key
+    pag.press(right_key, presses=int(offset[0]))
     if offset[1] == '+':
         pag.press('right', presses=int(offset[2]))
     else:
