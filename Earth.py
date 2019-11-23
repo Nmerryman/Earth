@@ -342,8 +342,8 @@ def sim_drop_map(colormap, active, offset):
     if top_pad < 0:
         clean_active_shape = clean_active_shape[abs(top_pad):]
         top_pad = 0
-    print('clean_active_shape, ((top_pad, bottom_pad), (left_pad, right_pad))\n', clean_active_shape, ((top_pad, bottom_pad), (left_pad, right_pad)))
-    print(real_field)
+    # print('clean_active_shape, ((top_pad, bottom_pad), (left_pad, right_pad))\n', clean_active_shape, ((top_pad, bottom_pad), (left_pad, right_pad)))
+    # print(real_field)
     new_out_layer = real_field + np.pad(clean_active_shape, ((top_pad, bottom_pad), (left_pad, right_pad)),
                                         mode='constant', constant_values=(0, 0))
     # print('out: \n', new_out_layer)
@@ -443,6 +443,7 @@ def hands_engine(color_map_in, current_level=0):
 def execute_offset(offset):
     # rotations
     global right_key
+    print('key, offset:', right_key, offset)
     pag.press(right_key, presses=int(offset[0]))
     if offset[1] == '+':
         pag.press('right', presses=int(offset[2]))
@@ -484,18 +485,24 @@ def earth(tile_map, active_piece, queue):
     #     third_selection.append(hold)
     print('out', hold)
     best = ''
-    lowest = 99
+    lowest = 9999
+    chosen = []
     for num_a, a in enumerate(hold):
         for b in a:
             height_array = get_heights(b[2])
             scan_out = map_scan(b[2], b[1])
-            avg_height = math.sqrt(pow(height_array.sum(), 2) + pow(scan_out[5], 4)) / len(height_array)
+            avg_height = math.sqrt(pow(height_array.sum(), 2) + pow(scan_out[5] * 10, 2)) / len(height_array)
             # print('tested')
             if avg_height < lowest:
                 best = first_selection[num_a][1]
                 lowest = avg_height
+                print('upgrade best, piece, lowest, h, s:', best, piece, lowest, height_array.sum(), scan_out[5] * 10)
+                chosen = b
 
-    print('placed', best, piece)
+    print('placed', best, piece, lowest)
+    print('chosen')
+    for a in chosen[2]:
+        print(a)
     # best = filter_options(first_selection, queue, 0)
     execute_offset(best)
     pass
