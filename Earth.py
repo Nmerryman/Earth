@@ -7,6 +7,7 @@ from numpy import array
 import concurrent.futures
 import random
 
+# set up some initial values
 pag.PAUSE = 0.0
 target_site = 'Jstris - Mozilla Firefox (Private Browsing)'
 test_target = 'Jstris - Mozilla Firefox'
@@ -22,7 +23,7 @@ else:
 #
 
 
-# only the field cords
+# open transparent and intractable window to find starting coordinates
 def get_cords():
     def append_cords(data):
         # only need TL and BR corners
@@ -63,7 +64,8 @@ def get_cords():
     return real_cords
 
 
-# to clean up the main function
+# to clean up the coordinate function
+# can use a cache
 def get_cord_wrapper(use_past_cords=False):
     queue_cords = []
     if use_past_cords:
@@ -81,7 +83,7 @@ def get_cord_wrapper(use_past_cords=False):
     return cords, queue_cords
 
 
-# return the heights, holes, and maybe others
+# interpret the given area to convert to board state
 def get_field(cords):
     global window_name
     w = win32ui.FindWindow(None, window_name)
@@ -97,6 +99,7 @@ def get_field(cords):
     return color_map
 
 
+# get visible queue
 def get_queue(queue_cords):
     global window_name
     map_colors = []
@@ -117,7 +120,7 @@ def get_queue(queue_cords):
     return order
 
 
-# used in get_field()
+# used in get_field() as a color to piece conversion helper
 def color_to_name(color):
     names = {0: 0, 3608535: 6, 9054639: 5, 154595: 3, 12992801: 4,
              110937: 7, 14129935: 1, 172003: 2}
@@ -129,6 +132,7 @@ def color_to_name(color):
     return give
 
 
+# analyse board for height of each column
 def get_heights(color_map):
     heights = np.zeros((10,))
     for a in range(10):
@@ -143,6 +147,7 @@ def get_heights(color_map):
     return heights
 
 
+# analyse the board to evaluate columns of interest
 def get_wells(heights, tipping=3):
     prev = 99
     # tipping = 3
@@ -152,16 +157,17 @@ def get_wells(heights, tipping=3):
             if prev - a > tipping and heights[num + 1] - a > tipping:
                 locations.append(num)
             prev = a
-            
-            
+
+
         else:
             if prev - a > tipping:
                 locations.append(num)
     return locations
 
 
+# potential future states filter for the best ones
 def filter_options(options, queue, current_depth, mid_scan=True):
-    return options[0][1]
+    # return options[0][1]  # Debug to use first avalible option
 
     def pipe_check(pipe_in):
         temp = []
@@ -255,6 +261,7 @@ def filter_options(options, queue, current_depth, mid_scan=True):
     return pipe[1]
 
 
+# A basic simulation of the board to test possible moves
 def sim_drop_map(colormap, active, offset):
     if len(colormap) == 21:
         colormap.pop()
@@ -353,13 +360,14 @@ def map_scan(color_map, offset):
     height_avg = height_array.sum() / len(height_array)
     height_std = height_array.std()
     first_holes_heights, hole_locations, total_holes = get_holes(color_map, height_array)
-    # fixme fix hole_diff
+    # fixme fix hole_diff (set to out of bounds to be ignored rn)
     hole_diff = 0
     # hole_diff = height_array - array(first_holes_heights[:, 0])
     return lines_cleared, new_map, height_array.tolist(), wells, height_avg, height_std, first_holes_heights, \
            hole_locations, hole_diff, total_holes
 
 
+# account for clearing lines is simulations
 def clear_lines(color_map):
     # print('checked for clear')
     # color_map = []
@@ -376,6 +384,7 @@ def clear_lines(color_map):
     return lines_cleared, color_map
 
 
+# identify and sort buried holes
 def get_holes(color_map, height_array):
     hole_heights_by_column = []
     first_hole_list = []
@@ -387,7 +396,7 @@ def get_holes(color_map, height_array):
         hole_heights = []
         a = int(a)
         for b in range(20 - a, 20):
-            # fixme hole stuff
+            # fixme improve hole stuff
             if color_map[b][num_a] == 0:
                 if not first_found:
                     first_found = True
@@ -403,6 +412,7 @@ def get_holes(color_map, height_array):
     return first_hole_list, hole_heights_by_column, total_holes
 
 
+# generate potential states to be evaluated
 def hands_engine(color_map_in, current_level=0):
     possibilities = {6: [(-3, 5), (-4, 5)], 7: [(-3, 5), (-4, 5)], 2: [(-4, 5)],
                      1: [(-3, 4), (-5, 5)], 3: [(-3, 5), (-4, 5), (-3, 5), (-3, 6)],
@@ -434,6 +444,7 @@ def hands_engine(color_map_in, current_level=0):
     return pipe
 
 
+# sends the chosen instructions to the game window
 def execute_offset(offset):
     # rotations
     global right_key
@@ -443,7 +454,7 @@ def execute_offset(offset):
     else:
         pag.press('left', presses=int(offset[2]))
     pag.press('space')
-    # max is .04
+    # min is .04
     time.sleep(.04)
 
 
@@ -458,23 +469,24 @@ def earth(tile_map, active_piece, queue):
     # print('selection format:', first_selection[0])
     # print(2, first_selection)
 
-    with concurrent.futures.ProcessPoolExecutor() as runner:
-        second_selection = runner.map(hands_engine, first_selection)
-        hold = []
-        print(second_selection)
-        for a in second_selection:
-            print('second', a)
-            hold.append(a)
-    # for a in first_selection:
-    #     print(2)
-    #     second_selection.append(hands_engine(a[2], queue[0]))
-    # third_selection = []
-    # hold = []
-    # for a in second_selection:
-    #     for b in a:
-    #         print(3)
-    #         hold.append(hands_engine(b[2], queue[1]))
-    #     third_selection.append(hold)
+    # add potential multithreading support
+    # with concurrent.futures.ProcessPoolExecutor() as runner:
+    #     second_selection = runner.map(hands_engine, first_selection)
+    #     hold = []
+    #     print(second_selection)
+    #     for a in second_selection:
+    #         print('second', a)
+    #         hold.append(a)
+    for a in first_selection:
+        print(2)
+        second_selection.append(hands_engine(a[2], queue[0]))
+    third_selection = []
+    hold = []
+    for a in second_selection:
+        for b in a:
+            print(3)
+            hold.append(hands_engine(b[2], queue[1]))
+        third_selection.append(hold)
     print('out', hold)
     best = ''
     lowest = 99
@@ -490,7 +502,6 @@ def earth(tile_map, active_piece, queue):
     print('placed', best, piece)
     # best = filter_options(first_selection, queue, 0)
     execute_offset(best)
-    pass
 
 
 if __name__ == '__main__':
@@ -501,7 +512,7 @@ if __name__ == '__main__':
     pag.press('f4')
     time.sleep(1.9)
     end = 0
-    while True:
+    while True:  # get state, calculate best move, execute action
         field_map = get_field(cord_map)
         known_queue = get_queue(queue_map)
         print('queue:', known_queue)
